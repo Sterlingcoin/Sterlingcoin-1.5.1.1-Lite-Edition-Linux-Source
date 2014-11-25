@@ -1,4 +1,4 @@
-Sterlingcoin Version 1.3.0.0
+Sterlingcoin Lite Edition Version 1.3.0.0
 
 POD-CryptoAsian
 
