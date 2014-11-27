@@ -4,8 +4,8 @@ TARGET = Sterlingcoin-qt
 macx:TARGET = "Sterlingcoin-Qt"
 VERSION = 1.3.0.0
 INCLUDEPATH += src src/json src/qt
-QT += core gui network webkit
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport webkitwidgets
+QT += core gui network
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE QT_DISABLE_DEPRECATED_BEFORE=0
 CONFIG += no_include_pwd
 CONFIG += thread
