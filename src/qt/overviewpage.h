@@ -47,7 +47,6 @@ private:
 private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
-    void sslErrorHandler(QNetworkReply *reply, const QList<QSslError> & errors);
 };
 
 #endif // OVERVIEWPAGE_H
