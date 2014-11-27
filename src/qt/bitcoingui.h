@@ -3,8 +3,6 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
-#include <QWebFrame>
-#include <QWebElement>
 
 class TransactionTableModel;
 class ClientModel;
