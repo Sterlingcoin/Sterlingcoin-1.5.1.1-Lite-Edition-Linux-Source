@@ -12,14 +12,9 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
-#include <QWebView>
-#include <QSslError>
-#include <QNetworkReply>
-#include <QSslConfiguration>
-#include <QUrl>
 
 #define DECORATION_SIZE 64
-#define NUM_ITEMS 6
+#define NUM_ITEMS 3
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -105,6 +100,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     txdelegate(new TxViewDelegate()),
     filter(0)
 {
+    ui->setupUi(this);
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
@@ -226,15 +222,6 @@ void OverviewPage::updateDisplayUnit()
 
         ui->listTransactions->update();
     }
-}
-
-void OverviewPage::sslErrorHandler(QNetworkReply *reply, const QList<QSslError> & errors )
-{
-    qDebug() << "sslErrorHandler:";
-    foreach (QSslError err, errors)
-      qDebug() << "ssl error: " << err;
-
-    reply->ignoreSslErrors();
 }
 
 void OverviewPage::showOutOfSyncWarning(bool fShow)
