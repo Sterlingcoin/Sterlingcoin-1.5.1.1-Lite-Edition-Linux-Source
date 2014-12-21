@@ -7,6 +7,7 @@
 #include "optionsmodel.h"
 #include "guiutil.h"
 #include "guiconstants.h"
+#include "winshutdownmonitor.h"
 
 #include "init.h"
 #include "ui_interface.h"
@@ -83,7 +84,7 @@ static void InitMessage(const std::string &message)
 {
     if(splashref)
     {
-        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(0,0,0));
+        splashref->showMessage(QString::fromStdString(message), Qt::AlignBottom|Qt::AlignHCenter, QColor(255,255,255));
         QApplication::instance()->processEvents();
     }
 }
@@ -147,9 +148,9 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Sterlingcoin");
     //XXX app.setOrganizationDomain("");
     if(GetBoolArg("-testnet")) // Separate UI settings for testnet
-        app.setApplicationName("Sterlingcoin-Qt-testnet");
+        app.setApplicationName("Sterlingcoin-1.4-Full-Release-testnet");
     else
-        app.setApplicationName("Sterlingcoin-Qt");
+        app.setApplicationName("Sterlingcoin-1.4-Full-Release");
 
     // ... then GUI settings:
     OptionsModel optionsModel;
@@ -210,7 +211,9 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
 
     try
-    {
+    {   
+        if (fUseGreyTheme)
+            GUIUtil::SetGreyThemeQSS(app);
         // Regenerate startup link, to fix links to old versions
         if (GUIUtil::GetStartOnSystemStartup())
             GUIUtil::SetStartOnSystemStartup(true);
@@ -230,9 +233,13 @@ int main(int argc, char *argv[])
 
                 ClientModel clientModel(&optionsModel);
                 WalletModel walletModel(pwalletMain, &optionsModel);
-
+                
                 window.setClientModel(&clientModel);
                 window.setWalletModel(&walletModel);
+                
+                #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
+                app.installNativeEventFilter(new WinShutdownMonitor());
+                #endif
 
                 // If -min option passed, start window minimized.
                 if(GetBoolArg("-min"))
@@ -246,6 +253,10 @@ int main(int argc, char *argv[])
 
                 // Place this here as guiref has to be defined if we don't want to lose URIs
                 ipcInit(argc, argv);
+
+                #if defined(Q_OS_WIN) && QT_VERSION >= 0x050000
+                WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("HoboNickels shutting down. Please wait..."), (HWND)window.getMainWinId());
+                #endif
 
                 app.exec();
 

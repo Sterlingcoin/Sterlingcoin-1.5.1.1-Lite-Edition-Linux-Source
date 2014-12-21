@@ -12,9 +12,13 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <QSslError>
+#include <QNetworkReply>
+#include <QSslConfiguration>
+#include <QUrl>
 
 #define DECORATION_SIZE 64
-#define NUM_ITEMS 3
+#define NUM_ITEMS 6
 
 class TxViewDelegate : public QAbstractItemDelegate
 {
@@ -51,7 +55,7 @@ public:
             foreground = qvariant_cast<QColor>(value);
         }
 
-        painter->setPen(foreground);
+        painter->setPen(fUseGreyTheme ? QColor(255, 255, 255) : foreground);
         painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address);
 
         if(amount < 0)
@@ -66,7 +70,7 @@ public:
         {
             foreground = option.palette.color(QPalette::Text);
         }
-        painter->setPen(foreground);
+        painter->setPen(fUseGreyTheme ? QColor(255, 255, 255) : foreground);
         QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true);
         if(!confirmed)
         {
@@ -74,7 +78,7 @@ public:
         }
         painter->drawText(amountRect, Qt::AlignRight|Qt::AlignVCenter, amountText);
 
-        painter->setPen(option.palette.color(QPalette::Text));
+        painter->setPen(fUseGreyTheme ? QColor(255, 255, 255) : option.palette.color(QPalette::Text));
         painter->drawText(amountRect, Qt::AlignLeft|Qt::AlignVCenter, GUIUtil::dateTimeStr(date));
 
         painter->restore();
@@ -101,6 +105,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
     filter(0)
 {
     ui->setupUi(this);
+    
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
@@ -115,7 +120,18 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
+    
+    if (fUseGreyTheme)
+    {
+        const char* whiteLabelQSS = "QLabel { color: rgb(255,255,255); }";
+        ui->labelBalance->setStyleSheet(whiteLabelQSS);
+        ui->labelStake->setStyleSheet(whiteLabelQSS);
+        ui->labelUnconfirmed->setStyleSheet(whiteLabelQSS);
+        ui->labelImmature->setStyleSheet(whiteLabelQSS);
+        ui->labelTotal->setStyleSheet(whiteLabelQSS);
+    }
 }
+
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 {

@@ -60,6 +60,7 @@
 #include <QDragEnterEvent>
 #include <QUrl>
 #include <QStyle>
+#include <QStyleFactory>
 
 #include <iostream>
 
@@ -79,9 +80,10 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     aboutQtAction(0),
     trayIcon(0),
     notificator(0),
-    rpcConsole(0)
+    rpcConsole(0),
+    nWeight(0)
 {
-    resize(850, 550);
+    resize(1460, 675);
     setWindowTitle(tr("Sterlingcoin") + " - " + tr("Wallet"));
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
@@ -105,12 +107,27 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
 
+    QPalette p;
+    p.setColor(QPalette::Window, QColor(138, 138, 138));
+    p.setColor(QPalette::Text, QColor(255, 255, 255));
+    setPalette(p);
+
+    QFile f(":qdarkstyle/style.qss");
+    if (f.exists())
+    {
+        f.open(QFile::ReadOnly | QFile::Text);
+        QTextStream ts(&f);
+        qApp->setStyleSheet(ts.readAll());
+    }
+    else
+        QApplication::setStyle(QStyleFactory::create("Fusion"));
+
     // Create tabs
     overviewPage = new OverviewPage();
-    poolBrowser = new PoolBrowser(this);
-    blockBrowser = new BlockBrowser(this);
-    statisticsPage = new StatisticsPage(this);
-
+    sendCoinsPage = new SendCoinsDialog(this);
+    receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
+    signVerifyMessageDialog = new SignVerifyMessageDialog(this);
+    
     transactionsPage = new QWidget(this);
     QVBoxLayout *vbox = new QVBoxLayout();
     transactionView = new TransactionView(this);
@@ -118,22 +135,20 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     transactionsPage->setLayout(vbox);
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-
-    receiveCoinsPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab);
-
-    sendCoinsPage = new SendCoinsDialog(this);
-
-    signVerifyMessageDialog = new SignVerifyMessageDialog(this);
+    poolBrowser = new PoolBrowser(this);
+    
+    blockBrowser = new BlockBrowser(this);
+    statisticsPage = new StatisticsPage(this);
 
     centralWidget = new QStackedWidget(this);
     centralWidget->addWidget(overviewPage);
-    centralWidget->addWidget(statisticsPage);
-    centralWidget->addWidget(poolBrowser);
-    centralWidget->addWidget(blockBrowser);
+    centralWidget->addWidget(sendCoinsPage);
+    centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(transactionsPage);
     centralWidget->addWidget(addressBookPage);
-    centralWidget->addWidget(receiveCoinsPage);
-    centralWidget->addWidget(sendCoinsPage);
+    centralWidget->addWidget(poolBrowser);
+    centralWidget->addWidget(blockBrowser);
+    centralWidget->addWidget(statisticsPage);
     setCentralWidget(centralWidget);
 
     // Create status bar
@@ -175,6 +190,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     progressBar->setAlignment(Qt::AlignCenter);
     progressBar->setVisible(false);
 
+    if (!fUseGreyTheme)
+    {
     // Override style sheet for progress bar for styles that have a segmented progress bar,
     // as they make the text unreadable (workaround for issue #1071)
     // See https://qt-project.org/doc/qt-4.8/gallery.html
@@ -183,6 +200,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     {
         progressBar->setStyleSheet("QProgressBar { background-color: #8a8a8a; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
         appMenuBar->setStyleSheet("QMenuBar { background-color: #8a8a8a; }");
+        }
     }
 
     statusBar()->addWidget(progressBarLabel);
@@ -270,7 +288,6 @@ void BitcoinGUI::createActions()
     statisticsAction->setCheckable(true);
     tabGroup->addAction(statisticsAction);
 
-    connect(blockAction, SIGNAL(triggered()), this, SLOT(gotoBlockBrowser()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
     connect(poolAction, SIGNAL(triggered()), this, SLOT(gotoPoolBrowser()));
@@ -282,6 +299,7 @@ void BitcoinGUI::createActions()
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(addressBookAction, SIGNAL(triggered()), this, SLOT(gotoAddressBookPage()));
+    connect(blockAction, SIGNAL(triggered()), this, SLOT(gotoBlockBrowser()));
     connect(statisticsAction, SIGNAL(triggered()), this, SLOT(gotoStatisticsPage()));
 
     quitAction = new QAction(QIcon(":/icons/quit"), tr("E&xit"), this);
@@ -376,7 +394,7 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(addressBookAction);
     toolbar->addAction(poolAction);
     toolbar->addAction(blockAction);
-    toolbar->addAction(statisticsAction);
+    toolbar->addAction(statisticsAction); 
      
     QToolBar *toolbar2 = addToolBar(tr("Actions toolbar"));
     toolbar2->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -766,7 +784,6 @@ void BitcoinGUI::gotoStatisticsPage()
     statisticsAction->setChecked(true);
     centralWidget->setCurrentWidget(statisticsPage);
     
-    exportAction->setVisible(false);
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
 }
@@ -984,11 +1001,26 @@ void BitcoinGUI::toggleHidden()
     showNormalIfMinimized(true);
 }
 
+void BitcoinGUI::updateWeight()
+{
+    if (!pwalletMain)
+        return;
+
+    TRY_LOCK(cs_main, lockMain);
+    if (!lockMain)
+        return;
+
+    TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
+    if (!lockWallet)
+        return;
+
+    uint64_t nMinWeight = 0, nMaxWeight = 0;
+    pwalletMain->GetStakeWeight(*pwalletMain, nMinWeight, nMaxWeight, nWeight);
+}
+
 void BitcoinGUI::updateStakingIcon()
 {
-    uint64_t nMinWeight = 0, nMaxWeight = 0, nWeight = 0;
-    if (pwalletMain)
-        pwalletMain->GetStakeWeight(*pwalletMain, nMinWeight, nMaxWeight, nWeight);
+    updateWeight();
 
     if (nLastCoinStakeSearchInterval && nWeight)
     {
@@ -1030,4 +1062,9 @@ void BitcoinGUI::updateStakingIcon()
         else
             labelStakingIcon->setToolTip(tr("Not staking"));
     }
+}
+
+WId BitcoinGUI::getMainWinId() const
+{
+    return winId();
 }

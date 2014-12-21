@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QSystemTrayIcon>
 
+#include <stdint.h>
+
 class TransactionTableModel;
 class ClientModel;
 class WalletModel;
@@ -50,6 +52,9 @@ public:
     */
     void setWalletModel(WalletModel *walletModel);
 
+    /// Get window identifier of QMainWindow (BitcoinGUI)
+    WId getMainWinId() const;
+
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
@@ -63,15 +68,14 @@ private:
     QStackedWidget *centralWidget;
 
     OverviewPage *overviewPage;
-    QWidget *transactionsPage;
-    AddressBookPage *addressBookPage;
-    AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
-
+    AddressBookPage *receiveCoinsPage;
+    QWidget *transactionsPage;
+    AddressBookPage *addressBookPage;
     PoolBrowser *poolBrowser;
     BlockBrowser *blockBrowser;
-    StatisticsPage *statisticsPage; 
+    StatisticsPage *statisticsPage;  
 
     QLabel *labelEncryptionIcon;
     QLabel *labelStakingIcon;
@@ -103,13 +107,16 @@ private:
     QAction *lockWalletAction;
     QAction *aboutQtAction;
     QAction *openRPCConsoleAction;
-    
+
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
     TransactionView *transactionView;
     RPCConsole *rpcConsole;
 
-    QMovie *syncIconMovie;  
+    QMovie *syncIconMovie;
+
+    uint64_t nWeight;
+    
 
     /** Create the main UI actions. */
     void createActions();
@@ -147,25 +154,24 @@ public slots:
 private slots:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-    /** Switch to Statistics Page*/
-    void gotoStatisticsPage();
+    /** Switch to send coins page */
+    void gotoSendCoinsPage();
+    /** Switch to receive coins page */
+    void gotoReceiveCoinsPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch to address book page */
     void gotoAddressBookPage();
-    /** Switch to receive coins page */
-    void gotoReceiveCoinsPage();
-    /** Switch to send coins page */
-    void gotoSendCoinsPage();
     /** Switch to Bittrex feed*/
     void gotoPoolBrowser();
     /** Switch to block explorer*/
     void gotoBlockBrowser();
+    /** Switch to Statistics Page*/
+    void gotoStatisticsPage();
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-
     /** Show configuration dialog */
     void optionsClicked();
     /** Show about dialog */
@@ -195,6 +201,8 @@ private slots:
     /** simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
 
+    void updateWeight();
+    
     void updateStakingIcon();
 };
 
