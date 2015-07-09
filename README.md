@@ -1,4 +1,4 @@
-Sterlingcoin Version 1.4.0.0 Lite Edition
+Sterlingcoin Version 1.5.0.0 Lite Edition
 
 POD-CryptoAsian
 
@@ -7,7 +7,7 @@ Sterlingcoin integration/staging tree
 
 http://www.sterlingcoin.org.uk
 
-Copyright (c) 2014 Sterlingcoin Developers
+Copyright (c) 2014-2015 Sterlingcoin Developers
 
 What is Sterlingcoin?
 ----------------
