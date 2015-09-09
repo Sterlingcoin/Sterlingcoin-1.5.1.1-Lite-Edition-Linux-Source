@@ -18,7 +18,6 @@ class SendCoinsDialog;
 class SignVerifyMessageDialog;
 class Notificator;
 class RPCConsole;
-class PoolBrowser;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -73,7 +72,6 @@ private:
     AddressBookPage *receiveCoinsPage;
     QWidget *transactionsPage;
     AddressBookPage *addressBookPage;
-    PoolBrowser *poolBrowser;
     BlockBrowser *blockBrowser;
     StatisticsPage *statisticsPage;  
 
@@ -162,8 +160,6 @@ private slots:
     void gotoHistoryPage();
     /** Switch to address book page */
     void gotoAddressBookPage();
-    /** Switch to Bittrex feed*/
-    void gotoPoolBrowser();
     /** Switch to block explorer*/
     void gotoBlockBrowser();
     /** Switch to Statistics Page*/

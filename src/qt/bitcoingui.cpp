@@ -26,7 +26,6 @@
 #include "guiutil.h"
 #include "rpcconsole.h"
 #include "wallet.h"
-#include "poolbrowser.h"
 #include "blockbrowser.h"
 #include "statisticspage.h"
 
@@ -113,14 +112,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     setPalette(p);
 
     QFile f(":qdarkstyle/style.qss");
-    if (f.exists())
-    {
-        f.open(QFile::ReadOnly | QFile::Text);
-        QTextStream ts(&f);
-        qApp->setStyleSheet(ts.readAll());
-    }
-    else
-        QApplication::setStyle(QStyleFactory::create("Fusion"));
+    QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     // Create tabs
     overviewPage = new OverviewPage();
@@ -135,7 +127,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     transactionsPage->setLayout(vbox);
 
     addressBookPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab);
-    poolBrowser = new PoolBrowser(this);
     
     blockBrowser = new BlockBrowser(this);
     statisticsPage = new StatisticsPage(this);
@@ -146,7 +137,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     centralWidget->addWidget(receiveCoinsPage);
     centralWidget->addWidget(transactionsPage);
     centralWidget->addWidget(addressBookPage);
-    centralWidget->addWidget(poolBrowser);
     centralWidget->addWidget(blockBrowser);
     centralWidget->addWidget(statisticsPage);
     setCentralWidget(centralWidget);
@@ -290,7 +280,6 @@ void BitcoinGUI::createActions()
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
-    connect(poolAction, SIGNAL(triggered()), this, SLOT(gotoPoolBrowser()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
     connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -759,15 +748,6 @@ void BitcoinGUI::gotoOverviewPage()
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
-}
-
-void BitcoinGUI::gotoPoolBrowser()
-{
-    poolAction->setChecked(true);
-    centralWidget->setCurrentWidget(poolBrowser);
-    exportAction->setEnabled(false);
-    disconnect(exportAction, SIGNAL(triggered()), 0, 0);
-
 }
 
 void BitcoinGUI::gotoBlockBrowser()
