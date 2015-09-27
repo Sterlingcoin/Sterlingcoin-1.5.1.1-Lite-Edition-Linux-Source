@@ -1,8 +1,8 @@
 #############################################################################################################################
 TEMPLATE = app
-TARGET = Sterlingcoin
-windows:TARGET = Sterlingcoin 1.5 Lite Edition
+TARGET = Sterlingcoin 1.5 Lite Edition
 macx:TARGET = "Sterlingcoin 1.5 Lite Edition"
+windows:TARGET = Sterlingcoin
 VERSION = 1.5.1.1
 INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
 QT += core gui network
